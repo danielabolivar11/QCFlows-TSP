@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>QCFlows K-matrix Demo</title>
+  <link rel="stylesheet" href="/demo.css">
+  <script src="/demo.js" defer></script>
+</head>
+<body>
+  <main>
+    <header>
+      <h1>QCFlows K-matrix Demo</h1>
+      <div class="status" id="status">Ready</div>
+    </header>
+
+    <div class="workspace">
+      <section aria-labelledby="request-title">
+        <div class="section-header">
+          <h2 id="request-title">Request JSON</h2>
+          <div class="sample-controls" aria-label="Samples">
+            <button type="button" data-sample="bell">Bell</button>
+            <button type="button" data-sample="product">Product</button>
+            <button type="button" data-sample="wPair">W pair</button>
+            <button type="button" class="primary" id="run-button">Run</button>
+          </div>
+        </div>
+        <textarea id="request-body" spellcheck="false" aria-label="Request JSON"></textarea>
+      </section>
+
+      <section aria-labelledby="response-title">
+        <div class="section-header">
+          <h2 id="response-title">Response</h2>
+        </div>
+        <pre id="response-body" aria-live="polite">{}</pre>
+      </section>
+    </div>
+  </main>
+</body>
+</html>

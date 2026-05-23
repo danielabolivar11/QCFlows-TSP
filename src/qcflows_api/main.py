@@ -6,9 +6,11 @@ import numpy as np
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel, Field
 
+from qcflows_api.demo.routes import router as demo_router
 from qcflows_api.k_measure import compute_k_matrix
 
 app = FastAPI(title="QCFlows API", version="0.1.0")
+app.include_router(demo_router)
 
 
 class RDMInput(BaseModel):

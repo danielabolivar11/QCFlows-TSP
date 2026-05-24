@@ -1,0 +1,19 @@
+[project]
+name = "qcflows-interface"
+version = "0.0.1"
+license = "MIT"
+
+description = "Quantum Correlation Flows"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "fastapi>=0.136.1",
+    "gunicorn>=26.0.0",
+    "keyring>=25.7.0",
+    "qiskit>=2.4.1",
+    "qiskit-aer>=0.17.2",
+    "qiskit-ionq>=1.0.2",
+    "uvicorn[standard]>=0.47.0",
+]
+
+

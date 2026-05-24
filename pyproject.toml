@@ -1,24 +1,7 @@
-[build-system]
-requires = ["hatchling"]
-build-backend = "hatchling.build"
-
 [project]
-name = "qcflows-api"
+name = "qcflows"
 version = "0.1.0"
-description = "Minimal QCFlows API for K-matrix computation."
-readme = "README.md"
-requires-python = ">=3.11"
-dependencies = [
-  "fastapi",
-  "numpy",
-  "uvicorn",
-]
+required-python = ">=3.11"
 
-[project.optional-dependencies]
-dev = [
-  "pytest",
-]
-
-[tool.pytest.ini_options]
-testpaths = ["tests"]
-pythonpath = ["src"]
+[tool.uv.workspace]
+members = ["src/qcflows_api", "src/qcflows_interface"]

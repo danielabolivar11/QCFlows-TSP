@@ -25,3 +25,6 @@ pythonpath = ["src"]
 
 [tool.hatch.build.targets.wheel]
 packages = ["."]
+
+[tool.hatch.build.targets.wheel.sources]
+"" = "qcflows_api"

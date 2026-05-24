@@ -1,0 +1,3 @@
+[submodule "src/qcflows_interface/qcircuit-relayer"]
+	path = src/qcflows_interface/qcircuit-relayer
+	url = https://github.com/Itaborala/qcircuit-relayer.git

@@ -17,3 +17,5 @@ dependencies = [
 ]
 
 
+[tool.uv.sources]
+qcircuit-relayer = { path = "qcircuit-relayer" }

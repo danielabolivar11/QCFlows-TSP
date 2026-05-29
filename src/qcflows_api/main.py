@@ -93,6 +93,23 @@ def graph_data(
     }
 
 
+@app.get("/get_circuit")
+def get_circuit() -> dict[str, Any]:
+    return {
+        "num_qubits": _DEMO_NUM_QUBITS,
+        "operation_count": 2,
+        "circuit_diagram": (
+            "<pre>"
+            "q[0] |0> -H-@-\n"
+            "q[1] |0> ---X-\n"
+            "q[2] |0> -----\n"
+            "q[3] |0> -----\n"
+            "q[4] |0> -----"
+            "</pre>"
+        ),
+    }
+
+
 def _parse_complex_matrix(raw_matrix: list[list[Any]]) -> np.ndarray:
     if len(raw_matrix) != 4 or any(len(row) != 4 for row in raw_matrix):
         raise ValueError("each RDM rho must be a 4x4 matrix")

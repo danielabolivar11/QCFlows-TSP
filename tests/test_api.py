@@ -1,7 +1,15 @@
 import pytest
 from fastapi import HTTPException
 from qcflows_api.demo.routes import demo_page, demo_script, demo_styles
-from qcflows_api.main import KMatrixRequest, app, get_state, graph_data, health, k_matrix
+from qcflows_api.main import (
+    KMatrixRequest,
+    app,
+    get_circuit,
+    get_state,
+    graph_data,
+    health,
+    k_matrix,
+)
 
 
 def test_health_endpoint():
@@ -69,6 +77,15 @@ def test_graph_data_endpoint_returns_demo_k_signal():
         "value": pytest.approx(1.0),
         "directed": False,
     }]
+
+
+def test_get_circuit_endpoint_returns_demo_diagram():
+    payload = get_circuit()
+
+    assert payload["num_qubits"] == 5
+    assert payload["operation_count"] == 2
+    assert "q[0] |0> -H-@-" in payload["circuit_diagram"]
+    assert "q[1] |0> ---X-" in payload["circuit_diagram"]
 
 
 def test_k_matrix_endpoint_returns_ordered_matrix_with_missing_pairs_as_null():

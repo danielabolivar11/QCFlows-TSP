@@ -1,7 +1,7 @@
 import pytest
 from fastapi import HTTPException
 from qcflows_api.demo.routes import demo_page, demo_script, demo_styles
-from qcflows_api.main import KMatrixRequest, app, health, k_matrix
+from qcflows_api.main import KMatrixRequest, app, get_state, graph_data, health, k_matrix
 
 
 def test_health_endpoint():
@@ -34,6 +34,41 @@ def test_demo_router_is_registered_on_app():
     assert "/" in paths
     assert "/demo.css" in paths
     assert "/demo.js" in paths
+
+
+def test_get_state_endpoint_returns_demo_bell_state():
+    payload = get_state()
+    nonzero = [
+        item for item in payload["amplitudes"]
+        if item["magnitude_squared"] > 1e-9
+    ]
+
+    assert payload["basis"] == "z"
+    assert payload["num_qubits"] == 5
+    assert [item["basis_state"] for item in nonzero] == ["|00000>", "|00011>"]
+    assert [item["magnitude_squared"] for item in nonzero] == [
+        pytest.approx(0.5),
+        pytest.approx(0.5),
+    ]
+
+
+def test_graph_data_endpoint_returns_demo_k_signal():
+    payload = graph_data()
+
+    assert payload["metric"] == "k"
+    assert payload["metric_label"] == "K_Z"
+    assert payload["num_qubits"] == 5
+    assert payload["nodes"][0]["prob0"] == pytest.approx(0.5)
+    assert payload["nodes"][1]["prob0"] == pytest.approx(0.5)
+    assert payload["nodes"][2]["prob0"] == pytest.approx(1.0)
+    assert payload["matrix"][0][1] == pytest.approx(1.0)
+    assert payload["matrix"][1][0] == pytest.approx(1.0)
+    assert payload["edges"] == [{
+        "source": 0,
+        "target": 1,
+        "value": pytest.approx(1.0),
+        "directed": False,
+    }]
 
 
 def test_k_matrix_endpoint_returns_ordered_matrix_with_missing_pairs_as_null():

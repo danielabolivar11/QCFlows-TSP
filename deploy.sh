@@ -3,7 +3,9 @@ set -euo pipefail
 
 cd "$(dirname "$0")"
 
-git pull --recurse-submodules
+git pull --recurse-submoodules
 
-uv sync
-uv sync --project src/qcflows_interface
+UV="$HOME/.local/bin/uv"
+
+"$UV" sync
+"$UV" sync --project src/qcflows_interface

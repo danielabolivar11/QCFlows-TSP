@@ -3,7 +3,7 @@ set -euo pipefail
 
 cd "$(dirname "$0")"
 
-git pull --recurse-submoodules
+git pull --recurse-submodules
 
 UV="$HOME/.local/bin/uv"
 

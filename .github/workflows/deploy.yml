@@ -1,0 +1,24 @@
+name: QCFlows Updater
+on:
+  push:
+    branches: [main, staging]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Pull Changes over SSH
+        env:
+          SSH_KEY: ${{ secrets.QCFLOWS_DEPLOY_SSH_KEY }}
+          HOST: ${{ secrets.QCFLOWS_HOST }}
+          USER: ${{ secrets.QCFLOWS_DEPLOY_USER }}
+        run: |
+          mkdir -p ~/.ssh
+          echo "$SSH_KEY" > ~/.ssh/id_deploy
+          chmod 600 ~/.ssh/id_deploy
+          ssh-keyscan -H "$HOST" >> ~/.ssh/known_hosts
+          if [ "${{ github.ref_name }}" = "main" ]; then
+            ssh -i ~/.ssh/id_deploy "$USER@$HOST" 'bash ~/deploy/QCFlows/deploy.sh'
+          else
+            ssh -i ~/.ssh/id_deploy "$USER@$HOST" 'bash ~/staging/QCFlows/deploy.sh'
+          fi

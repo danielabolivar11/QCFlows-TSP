@@ -5,6 +5,7 @@ from qcflows_api.main import (
     KMatrixRequest,
     app,
     get_circuit,
+    get_operations,
     get_state,
     graph_data,
     health,
@@ -73,6 +74,31 @@ def test_timeline_endpoint_returns_demo_markers():
     ]
 
 
+def test_get_operations_endpoint_returns_demo_operation_model():
+    payload = get_operations()
+
+    assert payload == {
+        "num_qubits": 5,
+        "operation_count": 2,
+        "operations": [
+            {
+                "id": 1,
+                "gate": "h",
+                "qubits": [0],
+                "params": {},
+                "label": "H(0)",
+            },
+            {
+                "id": 2,
+                "gate": "cx",
+                "qubits": [0, 1],
+                "params": {},
+                "label": "CX(0,1)",
+            },
+        ],
+    }
+
+
 def test_get_state_endpoint_can_select_history_marker():
     payload = get_state(marker=1)
     nonzero = [
@@ -122,8 +148,13 @@ def test_graph_data_endpoint_can_select_pre_correlation_marker():
 def test_get_circuit_endpoint_returns_demo_diagram():
     payload = get_circuit()
 
+    assert payload["marker_label"] == "After CX(0,1)"
     assert payload["num_qubits"] == 5
     assert payload["operation_count"] == 2
+    assert [operation["label"] for operation in payload["operations"]] == [
+        "H(0)",
+        "CX(0,1)",
+    ]
     assert "q[0] |0> -H-@-" in payload["circuit_diagram"]
     assert "q[1] |0> ---X-" in payload["circuit_diagram"]
 
@@ -133,6 +164,7 @@ def test_get_circuit_endpoint_can_select_history_marker():
 
     assert payload["marker"] == 1
     assert payload["operation_count"] == 1
+    assert [operation["label"] for operation in payload["operations"]] == ["H(0)"]
     assert "q[0] |0> -H-" in payload["circuit_diagram"]
     assert "q[1] |0> ---" in payload["circuit_diagram"]
     assert "---X-" not in payload["circuit_diagram"]
@@ -143,7 +175,7 @@ def test_history_marker_rejects_unknown_marker():
         graph_data(marker=9)
 
     assert exc_info.value.status_code == 422
-    assert exc_info.value.detail == "marker must be one of: 0, 1, 2"
+    assert exc_info.value.detail == "marker must be between 0 and 2"
 
 
 def test_k_matrix_endpoint_returns_ordered_matrix_with_missing_pairs_as_null():

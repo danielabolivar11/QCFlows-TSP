@@ -9,6 +9,7 @@ from qcflows_api.main import (
     graph_data,
     health,
     k_matrix,
+    timeline,
 )
 
 
@@ -52,8 +53,36 @@ def test_get_state_endpoint_returns_demo_bell_state():
     ]
 
     assert payload["basis"] == "z"
+    assert payload["marker"] == 2
     assert payload["num_qubits"] == 5
     assert [item["basis_state"] for item in nonzero] == ["|00000>", "|00011>"]
+    assert [item["magnitude_squared"] for item in nonzero] == [
+        pytest.approx(0.5),
+        pytest.approx(0.5),
+    ]
+
+
+def test_timeline_endpoint_returns_demo_markers():
+    payload = timeline()
+
+    assert payload["current_marker"] == 2
+    assert payload["markers"] == [
+        {"id": 0, "label": "Input", "operation_count": 0},
+        {"id": 1, "label": "After H(0)", "operation_count": 1},
+        {"id": 2, "label": "After CX(0,1)", "operation_count": 2},
+    ]
+
+
+def test_get_state_endpoint_can_select_history_marker():
+    payload = get_state(marker=1)
+    nonzero = [
+        item for item in payload["amplitudes"]
+        if item["magnitude_squared"] > 1e-9
+    ]
+
+    assert payload["marker"] == 1
+    assert payload["marker_label"] == "After H(0)"
+    assert [item["basis_state"] for item in nonzero] == ["|00000>", "|00001>"]
     assert [item["magnitude_squared"] for item in nonzero] == [
         pytest.approx(0.5),
         pytest.approx(0.5),
@@ -79,6 +108,17 @@ def test_graph_data_endpoint_returns_demo_k_signal():
     }]
 
 
+def test_graph_data_endpoint_can_select_pre_correlation_marker():
+    payload = graph_data(marker=0)
+
+    assert payload["marker"] == 0
+    assert payload["marker_label"] == "Input"
+    assert payload["nodes"][0]["prob0"] == pytest.approx(1.0)
+    assert payload["nodes"][1]["prob0"] == pytest.approx(1.0)
+    assert payload["matrix"][0][1] is None
+    assert payload["edges"] == []
+
+
 def test_get_circuit_endpoint_returns_demo_diagram():
     payload = get_circuit()
 
@@ -86,6 +126,24 @@ def test_get_circuit_endpoint_returns_demo_diagram():
     assert payload["operation_count"] == 2
     assert "q[0] |0> -H-@-" in payload["circuit_diagram"]
     assert "q[1] |0> ---X-" in payload["circuit_diagram"]
+
+
+def test_get_circuit_endpoint_can_select_history_marker():
+    payload = get_circuit(marker=1)
+
+    assert payload["marker"] == 1
+    assert payload["operation_count"] == 1
+    assert "q[0] |0> -H-" in payload["circuit_diagram"]
+    assert "q[1] |0> ---" in payload["circuit_diagram"]
+    assert "---X-" not in payload["circuit_diagram"]
+
+
+def test_history_marker_rejects_unknown_marker():
+    with pytest.raises(HTTPException) as exc_info:
+        graph_data(marker=9)
+
+    assert exc_info.value.status_code == 422
+    assert exc_info.value.detail == "marker must be one of: 0, 1, 2"
 
 
 def test_k_matrix_endpoint_returns_ordered_matrix_with_missing_pairs_as_null():

@@ -1,9 +1,9 @@
 from __future__ import annotations
 
-from typing import Any, Literal
+from typing import Annotated, Any, Literal
 
 import numpy as np
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Query
 from pydantic import BaseModel, Field
 
 from qcflows_api.demo.routes import router as demo_router
@@ -54,11 +54,32 @@ def k_matrix(request: KMatrixRequest) -> dict[str, Any]:
     }
 
 
+@app.get("/timeline")
+def timeline() -> dict[str, Any]:
+    return {
+        "current_marker": _DEMO_LATEST_MARKER,
+        "markers": [
+            {
+                "id": marker,
+                "label": _DEMO_MARKER_LABELS[marker],
+                "operation_count": marker,
+            }
+            for marker in _DEMO_MARKERS
+        ],
+    }
+
+
 @app.get("/get_state")
-def get_state(basis: Literal["x", "y", "z"] = "z") -> dict[str, Any]:
-    state = _demo_statevector(basis)
+def get_state(
+    basis: Literal["x", "y", "z"] = "z",
+    marker: Annotated[int | None, Query(ge=0)] = None,
+) -> dict[str, Any]:
+    resolved_marker = _resolve_demo_marker(marker)
+    state = _demo_statevector(basis, resolved_marker)
     return {
         "basis": basis,
+        "marker": resolved_marker,
+        "marker_label": _DEMO_MARKER_LABELS[resolved_marker],
         "num_qubits": _DEMO_NUM_QUBITS,
         "amplitudes": [
             {
@@ -75,10 +96,12 @@ def get_state(basis: Literal["x", "y", "z"] = "z") -> dict[str, Any]:
 def graph_data(
     basis: Literal["x", "y", "z"] = "z",
     metric: Literal["k"] = "k",
+    marker: Annotated[int | None, Query(ge=0)] = None,
 ) -> dict[str, Any]:
+    resolved_marker = _resolve_demo_marker(marker)
     matrix = compute_k_matrix(
         num_qubits=_DEMO_NUM_QUBITS,
-        rdms=[((0, 1), _DEMO_BELL_RDM)],
+        rdms=_demo_rdms(resolved_marker),
         basis=basis,
     )
     return {
@@ -86,27 +109,26 @@ def graph_data(
         "metric": metric,
         "metric_label": f"K_{basis.upper()}",
         "metric_max": 1.0,
+        "marker": resolved_marker,
+        "marker_label": _DEMO_MARKER_LABELS[resolved_marker],
         "num_qubits": _DEMO_NUM_QUBITS,
-        "nodes": _demo_nodes(basis),
+        "nodes": _demo_nodes(basis, resolved_marker),
         "edges": _matrix_edges(matrix),
         "matrix": matrix,
     }
 
 
 @app.get("/get_circuit")
-def get_circuit() -> dict[str, Any]:
+def get_circuit(
+    marker: Annotated[int | None, Query(ge=0)] = None,
+) -> dict[str, Any]:
+    resolved_marker = _resolve_demo_marker(marker)
     return {
+        "marker": resolved_marker,
+        "marker_label": _DEMO_MARKER_LABELS[resolved_marker],
         "num_qubits": _DEMO_NUM_QUBITS,
-        "operation_count": 2,
-        "circuit_diagram": (
-            "<pre>"
-            "q[0] |0> -H-@-\n"
-            "q[1] |0> ---X-\n"
-            "q[2] |0> -----\n"
-            "q[3] |0> -----\n"
-            "q[4] |0> -----"
-            "</pre>"
-        ),
+        "operation_count": resolved_marker,
+        "circuit_diagram": _demo_circuit_diagram(resolved_marker),
     }
 
 
@@ -136,9 +158,26 @@ def _is_number(value: Any) -> bool:
 
 
 _DEMO_NUM_QUBITS = 5
+_DEMO_MARKERS = (0, 1, 2)
+_DEMO_LATEST_MARKER = 2
+_DEMO_MARKER_LABELS = {
+    0: "Input",
+    1: "After H(0)",
+    2: "After CX(0,1)",
+}
+_DEMO_INPUT_STATE = np.zeros(2**_DEMO_NUM_QUBITS, dtype=complex)
+_DEMO_INPUT_STATE[0] = 1.0
+_DEMO_H_STATE = np.zeros(2**_DEMO_NUM_QUBITS, dtype=complex)
+_DEMO_H_STATE[0] = 1 / np.sqrt(2)
+_DEMO_H_STATE[1] = 1 / np.sqrt(2)
 _DEMO_BELL_STATE = np.zeros(2**_DEMO_NUM_QUBITS, dtype=complex)
 _DEMO_BELL_STATE[0] = 1 / np.sqrt(2)
 _DEMO_BELL_STATE[3] = 1 / np.sqrt(2)
+_DEMO_STATES = {
+    0: _DEMO_INPUT_STATE,
+    1: _DEMO_H_STATE,
+    2: _DEMO_BELL_STATE,
+}
 _DEMO_BELL_RDM = np.array([
     [0.5, 0.0, 0.0, 0.5],
     [0.0, 0.0, 0.0, 0.0],
@@ -147,8 +186,19 @@ _DEMO_BELL_RDM = np.array([
 ], dtype=complex)
 
 
-def _demo_statevector(basis: str) -> np.ndarray:
-    state = _DEMO_BELL_STATE.copy()
+def _resolve_demo_marker(marker: int | None) -> int:
+    if marker is None:
+        return _DEMO_LATEST_MARKER
+    if marker in _DEMO_MARKERS:
+        return marker
+    raise HTTPException(
+        status_code=422,
+        detail=f"marker must be one of: {', '.join(str(value) for value in _DEMO_MARKERS)}",
+    )
+
+
+def _demo_statevector(basis: str, marker: int) -> np.ndarray:
+    state = _DEMO_STATES[marker].copy()
     if basis == "z":
         return state
     rotation = _basis_display_rotation(basis)
@@ -157,8 +207,14 @@ def _demo_statevector(basis: str) -> np.ndarray:
     return state
 
 
-def _demo_nodes(basis: str) -> list[dict[str, float | int]]:
-    state = _demo_statevector(basis)
+def _demo_rdms(marker: int) -> list[tuple[tuple[int, int], np.ndarray]]:
+    if marker < 2:
+        return []
+    return [((0, 1), _DEMO_BELL_RDM)]
+
+
+def _demo_nodes(basis: str, marker: int) -> list[dict[str, float | int]]:
+    state = _demo_statevector(basis, marker)
     probabilities = np.abs(state) ** 2
     nodes: list[dict[str, float | int]] = []
     for qubit in range(_DEMO_NUM_QUBITS):
@@ -170,6 +226,33 @@ def _demo_nodes(basis: str) -> list[dict[str, float | int]]:
         )
         nodes.append({"id": qubit, "prob0": prob0})
     return nodes
+
+
+def _demo_circuit_diagram(marker: int) -> str:
+    rows = {
+        0: [
+            "q[0] |0> -----",
+            "q[1] |0> -----",
+            "q[2] |0> -----",
+            "q[3] |0> -----",
+            "q[4] |0> -----",
+        ],
+        1: [
+            "q[0] |0> -H-",
+            "q[1] |0> ---",
+            "q[2] |0> ---",
+            "q[3] |0> ---",
+            "q[4] |0> ---",
+        ],
+        2: [
+            "q[0] |0> -H-@-",
+            "q[1] |0> ---X-",
+            "q[2] |0> -----",
+            "q[3] |0> -----",
+            "q[4] |0> -----",
+        ],
+    }
+    return f"<pre>{chr(10).join(rows[marker])}</pre>"
 
 
 def _matrix_edges(matrix: list[list[float | None]]) -> list[dict[str, Any]]:

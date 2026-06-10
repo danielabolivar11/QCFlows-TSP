@@ -8,7 +8,12 @@ from pydantic import BaseModel, Field
 
 from qcflows_api.circuit_model import DEMO_CIRCUIT, CircuitSnapshot
 from qcflows_api.demo.routes import router as demo_router
-from qcflows_api.k_measure import compute_k_matrix
+from qcflows_api.pair_metrics import (
+    Metric,
+    compute_metric_matrix,
+    metric_label,
+    metric_max,
+)
 
 app = FastAPI(title="QCFlows API", version="0.1.0")
 app.include_router(demo_router)
@@ -21,10 +26,18 @@ class RDMInput(BaseModel):
         description="4x4 density matrix. Entries may be numbers or [real, imag].")
 
 
-class KMatrixRequest(BaseModel):
+class PairMatrixRequest(BaseModel):
     num_qubits: int = Field(ge=1)
     basis: Literal["x", "y", "z"] = "z"
     rdms: list[RDMInput]
+
+
+class KMatrixRequest(PairMatrixRequest):
+    pass
+
+
+class MetricMatrixRequest(PairMatrixRequest):
+    metric: Metric = "k"
 
 
 @app.get("/health")
@@ -34,25 +47,46 @@ def health() -> dict[str, str]:
 
 @app.post("/v0/k-matrix")
 def k_matrix(request: KMatrixRequest) -> dict[str, Any]:
-    try:
-        rdms = [
-            (rdm.qubits, _parse_complex_matrix(rdm.rho))
-            for rdm in request.rdms
-        ]
-        matrix = compute_k_matrix(
-            num_qubits=request.num_qubits,
-            rdms=rdms,
-            basis=request.basis,
-        )
-    except ValueError as exc:
-        raise HTTPException(status_code=422, detail=str(exc)) from exc
-
+    matrix = _compute_request_matrix(request, metric="k")
     return {
         "version": "0.1.0",
         "basis": request.basis,
         "num_qubits": request.num_qubits,
         "matrix": matrix,
     }
+
+
+@app.post("/v0/metric-matrix")
+def metric_matrix(request: MetricMatrixRequest) -> dict[str, Any]:
+    matrix = _compute_request_matrix(request, metric=request.metric)
+    return {
+        "version": "0.1.0",
+        "metric": request.metric,
+        "metric_label": metric_label(request.metric, request.basis),
+        "metric_max": metric_max(request.metric),
+        "basis": request.basis,
+        "num_qubits": request.num_qubits,
+        "matrix": matrix,
+    }
+
+
+def _compute_request_matrix(
+    request: PairMatrixRequest,
+    metric: Metric,
+) -> list[list[float | None]]:
+    try:
+        rdms = [
+            (rdm.qubits, _parse_complex_matrix(rdm.rho))
+            for rdm in request.rdms
+        ]
+        return compute_metric_matrix(
+            num_qubits=request.num_qubits,
+            rdms=rdms,
+            metric=metric,
+            basis=request.basis,
+        )
+    except ValueError as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
 
 
 @app.get("/timeline")
@@ -91,20 +125,21 @@ def get_state(
 @app.get("/graph_data")
 def graph_data(
     basis: Literal["x", "y", "z"] = "z",
-    metric: Literal["k"] = "k",
+    metric: Metric = "k",
     marker: Annotated[int | None, Query(ge=0)] = None,
 ) -> dict[str, Any]:
     snapshot = _resolve_demo_snapshot(marker)
-    matrix = compute_k_matrix(
+    matrix = compute_metric_matrix(
         num_qubits=_DEMO_NUM_QUBITS,
         rdms=_demo_rdms(snapshot),
+        metric=metric,
         basis=basis,
     )
     return {
         "basis": basis,
         "metric": metric,
-        "metric_label": f"K_{basis.upper()}",
-        "metric_max": 1.0,
+        "metric_label": metric_label(metric, basis),
+        "metric_max": metric_max(metric),
         "marker": snapshot.marker,
         "marker_label": snapshot.label,
         "num_qubits": _DEMO_NUM_QUBITS,

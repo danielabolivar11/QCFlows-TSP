@@ -1,8 +1,10 @@
 import pytest
 from fastapi import HTTPException
+from fastapi.testclient import TestClient
 from qcflows_api.demo.routes import demo_page, demo_script, demo_styles
 from qcflows_api.main import (
     KMatrixRequest,
+    MetricMatrixRequest,
     app,
     get_circuit,
     get_operations,
@@ -10,6 +12,7 @@ from qcflows_api.main import (
     graph_data,
     health,
     k_matrix,
+    metric_matrix,
     timeline,
 )
 
@@ -134,6 +137,52 @@ def test_graph_data_endpoint_returns_demo_k_signal():
     }]
 
 
+def test_graph_data_endpoint_returns_demo_eof_signal():
+    payload = graph_data(metric="eof")
+
+    assert payload["metric"] == "eof"
+    assert payload["metric_label"] == "EoF"
+    assert payload["metric_max"] == 1.0
+    assert payload["matrix"][0][1] == pytest.approx(1.0)
+    assert payload["matrix"][1][0] == pytest.approx(1.0)
+    assert payload["edges"] == [{
+        "source": 0,
+        "target": 1,
+        "value": pytest.approx(1.0),
+        "directed": False,
+    }]
+
+
+def test_graph_data_http_accepts_frontend_metric_values():
+    client = TestClient(app)
+
+    eof_response = client.get("/graph_data", params={"metric": "eof"})
+    mi_response = client.get("/graph_data", params={"metric": "mi"})
+    bad_response = client.get("/graph_data", params={"metric": "bad"})
+
+    assert eof_response.status_code == 200
+    assert eof_response.json()["metric"] == "eof"
+    assert mi_response.status_code == 200
+    assert mi_response.json()["metric"] == "mi"
+    assert bad_response.status_code == 422
+
+
+def test_graph_data_endpoint_returns_demo_mi_signal():
+    payload = graph_data(metric="mi")
+
+    assert payload["metric"] == "mi"
+    assert payload["metric_label"] == "MI"
+    assert payload["metric_max"] == 2.0
+    assert payload["matrix"][0][1] == pytest.approx(2.0)
+    assert payload["matrix"][1][0] == pytest.approx(2.0)
+    assert payload["edges"] == [{
+        "source": 0,
+        "target": 1,
+        "value": pytest.approx(2.0),
+        "directed": False,
+    }]
+
+
 def test_graph_data_endpoint_can_select_pre_correlation_marker():
     payload = graph_data(marker=0)
 
@@ -218,6 +267,31 @@ def test_k_matrix_endpoint_accepts_complex_entries():
         ))
 
     assert payload["matrix"] == [[0.0, 1.0], [1.0, 0.0]]
+
+
+def test_metric_matrix_endpoint_returns_requested_metric():
+    payload = metric_matrix(
+        MetricMatrixRequest(
+            num_qubits=2,
+            metric="mi",
+            rdms=[{
+                "qubits": [0, 1],
+                "rho": [
+                    [0.5, 0.0, 0.0, 0.5],
+                    [0.0, 0.0, 0.0, 0.0],
+                    [0.0, 0.0, 0.0, 0.0],
+                    [0.5, 0.0, 0.0, 0.5],
+                ],
+            }],
+        ))
+
+    assert payload["metric"] == "mi"
+    assert payload["metric_label"] == "MI"
+    assert payload["metric_max"] == 2.0
+    assert payload["matrix"][0][0] == 0.0
+    assert payload["matrix"][0][1] == pytest.approx(2.0)
+    assert payload["matrix"][1][0] == pytest.approx(2.0)
+    assert payload["matrix"][1][1] == 0.0
 
 
 def test_k_matrix_endpoint_rejects_bad_matrix_shape():

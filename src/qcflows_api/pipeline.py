@@ -5,8 +5,8 @@ import numpy as np
 
 from qcflows_api.k_measure import _basis_rotation
 from qcflows_api.pair_metrics import compute_metric_matrix, metric_label, metric_max, Metric
+from qcflows_api.branch_redirect import INTERFACE_URL
 
-INTERFACE_URL = os.environ.get("INTERFACE_URL", "http://127.0.0.1:8001")
 
 _BASIS_LABELS = {
     "z": ("0", "1"),

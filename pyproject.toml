@@ -5,12 +5,16 @@ build-backend = "hatchling.build"
 [project]
 name = "qcflows-api"
 version = "0.1.0"
-description = "Minimal QCFlows API for K-matrix computation."
+description = "Minimal QCFlows API for pairwise quantum correlation metrics."
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
   "fastapi",
+  "gunicorn>=26.0.0",
   "numpy",
+  "httpx>=0.27.0",
+  "qiskit>=2.4.0",
+  "qiskit_qasm3_import",
   "uvicorn",
 ]
 
@@ -22,4 +26,3 @@ dev = [
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 pythonpath = ["src"]
-

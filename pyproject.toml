@@ -12,6 +12,7 @@ dependencies = [
   "fastapi",
   "gunicorn>=26.0.0",
   "numpy",
+  "httpx>=0.27.0",
   "uvicorn",
 ]
 

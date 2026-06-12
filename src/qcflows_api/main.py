@@ -4,9 +4,12 @@ from typing import Annotated, Any, Literal
 
 import numpy as np
 from fastapi import FastAPI, HTTPException, Query
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
+import httpx
 
 from qcflows_api.circuit_model import DEMO_CIRCUIT, CircuitSnapshot
+from qcflows_api.pipeline import compute_markers, compute_markers_all_basis
 from qcflows_api.demo.routes import router as demo_router
 from qcflows_api.pair_metrics import (
     Metric,
@@ -18,6 +21,13 @@ from qcflows_api.pair_metrics import (
 app = FastAPI(title="QCFlows API", version="0.1.0")
 app.include_router(demo_router)
 
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 class RDMInput(BaseModel):
     qubits: tuple[int, int] = Field(
@@ -300,3 +310,43 @@ def _complex_pair(value: complex) -> list[float]:
         0.0 if abs(real) < 1e-12 else real,
         0.0 if abs(imag) < 1e-12 else imag,
     ]
+
+class _SimOp(BaseModel):
+    gate: str
+    qubits: list[int]
+    params: dict[str, float] = Field(default_factory=dict)
+
+
+class SimulateRequest(BaseModel):
+    num_qubits: int = Field(ge=1, le=12)
+    operations: list[_SimOp]
+    basis: Literal['x', 'y', 'z'] = 'z'
+    markers: list[int] | None = None
+    all_bases: bool = False
+
+
+@app.post("/simulate")
+def simulate(req: SimulateRequest) -> dict[str, Any]:
+    
+    ops = [op.model_dump() for op in req.operations]
+
+    try:
+        if req.all_bases:
+            results_by_basis = compute_markers_all_basis(req.num_qubits, ops, req.markers)
+        else:
+            results = compute_markers(req.num_qubits, ops, req.basis, req.markers)
+
+    except httpx.HTTPError as exc:
+        raise HTTPException(status_code=502, detail=f"interface error: {exc}") from exc
+    except ValueError as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
+
+    if req.all_bases:
+        return {"num_qubits": req.num_qubits, "results_by_basis": results_by_basis}
+
+    return {"basis": req.basis, "num_qubits": req.num_qubits, "results": results}
+
+
+
+
+

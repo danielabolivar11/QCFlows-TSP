@@ -10,7 +10,8 @@ router = APIRouter()
 _SINGLE = {"h", "x", "y", "z", "s", "t", "sdg", "tdg", "sx"}
 _ROT = {"rx", "ry", "rz"}
 _TWO = {"cx", "cz", "swap"}
-_SUPPORTED = _SINGLE | _ROT | _TWO
+_CROT = {"crx", "cry", "crz"}
+_SUPPORTED = _SINGLE | _ROT | _TWO | _CROT
 
 
 class _Op(BaseModel):
@@ -41,6 +42,9 @@ def _ops_to_circuit(num_qubits: int, operations: list[dict]) -> QuantumCircuit:
             getattr(qc, gate)(angle, qubits[0])
         elif gate in _TWO:
             getattr(qc, gate)(qubits[0], qubits[1])
+        elif gate in _CROT:
+            angle = float(params.get("angle", params.get("theta", np.pi / 2)))
+            getattr(qc, gate)(angle, qubits[0], qubits[1])
         else:
             raise ValueError(f"Unsupported gate: {gate!r}")
     return qc
@@ -54,7 +58,7 @@ def _circuit_to_ops(qc: QuantumCircuit) -> list[dict]:
         if gate not in _SUPPORTED:
             raise ValueError(f"Unsupported gate in QASM: {gate!r}")
         qubits = [qc.find_bit(q).index for q in instruction.qubits]
-        params = {"angle": float(op.params[0])} if gate in _ROT else {}
+        params = {"angle": float(op.params[0])} if gate in _ROT | _CROT else {}
         operations.append({"gate": gate, "qubits": qubits, "params": params})
     return operations
 

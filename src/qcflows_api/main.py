@@ -11,6 +11,7 @@ import httpx
 from qcflows_api.circuit_model import DEMO_CIRCUIT, CircuitSnapshot
 from qcflows_api.pipeline import compute_markers, compute_markers_all_basis
 from qcflows_api.demo.routes import router as demo_router
+from qcflows_api.qasm import router as qasm_router
 from qcflows_api.pair_metrics import (
     Metric,
     compute_metric_matrix,
@@ -20,6 +21,7 @@ from qcflows_api.pair_metrics import (
 
 app = FastAPI(title="QCFlows API", version="0.1.0")
 app.include_router(demo_router)
+app.include_router(qasm_router)
 
 
 app.add_middleware(

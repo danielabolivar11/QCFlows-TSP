@@ -3,7 +3,8 @@ import os
 import httpx
 import numpy as np
 
-from qcflows_api.k_measure import compute_k_matrix, _basis_rotation
+from qcflows_api.k_measure import _basis_rotation
+from qcflows_api.pair_metrics import compute_metric_matrix, metric_label, metric_max, Metric
 
 INTERFACE_URL = os.environ.get("INTERFACE_URL", "http://127.0.0.1:8001")
 
@@ -62,12 +63,12 @@ def _state_amplitudes(statevector, basis, n):
     ]
 
 
-def _build_results(raw_results, num_qubits, basis):
+def _build_results(raw_results, num_qubits, basis, metric: Metric="k"):
 
     results = []
     for entry in raw_results:
         rdms = [(tuple(r["qubits"]), _to_complex(r["rho"])) for r in entry["rdms"]]
-        matrix = compute_k_matrix(num_qubits, rdms, basis)
+        matrix = compute_metric_matrix(num_qubits, rdms, metric=metric, basis=basis)
         nodes = sorted(
             ({"id": m["qubit"], "prob0": _prob0(_to_complex(m["rho"]), basis)}
              for m in entry["marginals"]),
@@ -76,9 +77,9 @@ def _build_results(raw_results, num_qubits, basis):
         results.append({
             "marker": entry["marker"],
             "basis": basis,
-            "metric": "k",
-            "metric_label": f"K_{basis.upper()}",
-            "metric_max": 1.0,
+            "metric": metric,
+            "metric_label": metric_label(metric, basis),
+            "metric_max": metric_max(metric),
             "num_qubits": num_qubits,
             "nodes": nodes,
             "edges": _edges(matrix),
@@ -96,13 +97,25 @@ def _fetch_raw(num_qubits, operations, markers):
     return resp.json()["results"]
 
 
-def compute_markers(num_qubits, operations, basis, markers=None):
+def compute_markers(num_qubits, operations, basis, markers=None, metric: Metric ='k'):
     raw = _fetch_raw(num_qubits, operations, markers)
-    return _build_results(raw, num_qubits, basis)
+    return _build_results(raw, num_qubits, basis, metric)
 
 def compute_markers_all_basis(num_qubits, operations, markers=None):
     raw = _fetch_raw(num_qubits, operations, markers)
     return {
         basis: _build_results(raw, num_qubits, basis)
         for basis in ("z", "x", "y")
+    }
+
+
+
+def compute_markers_grid(num_qubits, operations, markers=None):
+    raw = _fetch_raw(num_qubits, operations, markers)
+    return {
+        metric: {
+            basis: _build_results(raw, num_qubits, basis, metric)
+            for basis in ("z", "x", "y")
+        }
+        for metric in ("k", "eof", "mi")
     }

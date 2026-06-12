@@ -9,7 +9,7 @@ from pydantic import BaseModel, Field
 import httpx
 
 from qcflows_api.circuit_model import DEMO_CIRCUIT, CircuitSnapshot
-from qcflows_api.pipeline import compute_markers, compute_markers_all_basis
+from qcflows_api.pipeline import compute_markers, compute_markers_all_basis, compute_markers_grid
 from qcflows_api.demo.routes import router as demo_router
 from qcflows_api.qasm import router as qasm_router
 from qcflows_api.pair_metrics import (
@@ -323,8 +323,10 @@ class SimulateRequest(BaseModel):
     num_qubits: int = Field(ge=1, le=12)
     operations: list[_SimOp]
     basis: Literal['x', 'y', 'z'] = 'z'
+    metric: Metric = "k"
     markers: list[int] | None = None
     all_bases: bool = False
+    all_metrics: bool = False
 
 
 @app.post("/simulate")
@@ -333,7 +335,9 @@ def simulate(req: SimulateRequest) -> dict[str, Any]:
     ops = [op.model_dump() for op in req.operations]
 
     try:
-        if req.all_bases:
+        if req.all_metrics:
+            grid = compute_markers_grid(req.num_qubits, ops, req.markers)
+        elif req.all_bases:
             results_by_basis = compute_markers_all_basis(req.num_qubits, ops, req.markers)
         else:
             results = compute_markers(req.num_qubits, ops, req.basis, req.markers)
@@ -343,6 +347,8 @@ def simulate(req: SimulateRequest) -> dict[str, Any]:
     except ValueError as exc:
         raise HTTPException(status_code=422, detail=str(exc)) from exc
 
+    if req.all_metrics:
+        return {"num_qubits": req.num_qubits, "results_by_metric_basis": grid}
     if req.all_bases:
         return {"num_qubits": req.num_qubits, "results_by_basis": results_by_basis}
 

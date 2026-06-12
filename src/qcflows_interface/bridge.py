@@ -6,6 +6,7 @@ from qiskit.quantum_info import Statevector, partial_trace
 _SINGLE_QUBIT_GATES = {"h", "x", "y", "z", "s", "t", "sdg", "tdg", "sx"}
 _SINGLE_QUBIT_ROT = {"rx", "ry", "rz"}
 _TWO_QUBIT_GATES = {"cx", "cz", "swap"}
+_CONTROLLED_ROT = {"crx", "cry", "crz"}
 
 
 # Switch endianess of the RDMs fom qiskit format |j i> to qcflow format |i j>. swap the order of the qubits leads to the permutation below:
@@ -36,6 +37,8 @@ def build_circuit(num_qubits: int, operations: list[dict]) -> QuantumCircuit:
             getattr(qc, gate)(_angle(params), qubits[0])
         elif gate in _TWO_QUBIT_GATES:
             getattr(qc, gate)(qubits[0], qubits[1])
+        elif gate in _CONTROLLED_ROT:
+            getattr(qc, gate)(_angle(params), qubits[0], qubits[1])
         else:
             raise ValueError(f"Unsupported gate: {gate!r}")
 

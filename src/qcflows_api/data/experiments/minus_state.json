@@ -1,0 +1,31 @@
+{
+  "id": "minus-state",
+  "title": "Minus State",
+  "description": "Prepare every qubit in the |-> state using X followed by H.",
+  "source": "builtin",
+  "circuit": {
+    "num_qubits": 5,
+    "operations": [
+      {"gate": "x", "qubits": [0], "params": {}},
+      {"gate": "h", "qubits": [0], "params": {}},
+      {"gate": "x", "qubits": [1], "params": {}},
+      {"gate": "h", "qubits": [1], "params": {}},
+      {"gate": "x", "qubits": [2], "params": {}},
+      {"gate": "h", "qubits": [2], "params": {}},
+      {"gate": "x", "qubits": [3], "params": {}},
+      {"gate": "h", "qubits": [3], "params": {}},
+      {"gate": "x", "qubits": [4], "params": {}},
+      {"gate": "h", "qubits": [4], "params": {}}
+    ]
+  },
+  "default_view": {
+    "metric": "k",
+    "basis": "x",
+    "marker": 10
+  },
+  "result_sets": [],
+  "provenance": {
+    "kind": "built-in default circuit"
+  },
+  "results_by_metric_basis": null
+}

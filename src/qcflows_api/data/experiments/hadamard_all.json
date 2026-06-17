@@ -1,0 +1,26 @@
+{
+  "id": "hadamard-all",
+  "title": "Hadamard All",
+  "description": "Apply H to every qubit to prepare an equal superposition.",
+  "source": "builtin",
+  "circuit": {
+    "num_qubits": 5,
+    "operations": [
+      {"gate": "h", "qubits": [0], "params": {}},
+      {"gate": "h", "qubits": [1], "params": {}},
+      {"gate": "h", "qubits": [2], "params": {}},
+      {"gate": "h", "qubits": [3], "params": {}},
+      {"gate": "h", "qubits": [4], "params": {}}
+    ]
+  },
+  "default_view": {
+    "metric": "k",
+    "basis": "z",
+    "marker": 5
+  },
+  "result_sets": [],
+  "provenance": {
+    "kind": "built-in default circuit"
+  },
+  "results_by_metric_basis": null
+}

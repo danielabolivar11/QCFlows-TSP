@@ -1,0 +1,42 @@
+{
+  "id": "qaoa-ring-layer",
+  "title": "QAOA Ring Layer",
+  "description": "A single illustrative QAOA-style layer on a 4-qubit ring.",
+  "source": "builtin",
+  "circuit": {
+    "num_qubits": 4,
+    "operations": [
+      {"gate": "h", "qubits": [0], "params": {}},
+      {"gate": "h", "qubits": [1], "params": {}},
+      {"gate": "h", "qubits": [2], "params": {}},
+      {"gate": "h", "qubits": [3], "params": {}},
+      {"gate": "cx", "qubits": [0, 1], "params": {}},
+      {"gate": "rz", "qubits": [1], "params": {"angle": 1.047198}},
+      {"gate": "cx", "qubits": [0, 1], "params": {}},
+      {"gate": "cx", "qubits": [1, 2], "params": {}},
+      {"gate": "rz", "qubits": [2], "params": {"angle": 1.047198}},
+      {"gate": "cx", "qubits": [1, 2], "params": {}},
+      {"gate": "cx", "qubits": [2, 3], "params": {}},
+      {"gate": "rz", "qubits": [3], "params": {"angle": 1.047198}},
+      {"gate": "cx", "qubits": [2, 3], "params": {}},
+      {"gate": "cx", "qubits": [3, 0], "params": {}},
+      {"gate": "rz", "qubits": [0], "params": {"angle": 1.047198}},
+      {"gate": "cx", "qubits": [3, 0], "params": {}},
+      {"gate": "rx", "qubits": [0], "params": {"angle": 0.785398}},
+      {"gate": "rx", "qubits": [1], "params": {"angle": 0.785398}},
+      {"gate": "rx", "qubits": [2], "params": {"angle": 0.785398}},
+      {"gate": "rx", "qubits": [3], "params": {"angle": 0.785398}}
+    ]
+  },
+  "default_view": {
+    "metric": "k",
+    "basis": "z",
+    "marker": 20
+  },
+  "result_sets": [],
+  "provenance": {
+    "kind": "built-in default circuit",
+    "notes": "Illustrative layer only; angles are not tied to an optimized MaxCut instance."
+  },
+  "results_by_metric_basis": null
+}

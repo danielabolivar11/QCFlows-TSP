@@ -1,0 +1,36 @@
+{
+  "id": "qft-5",
+  "title": "QFT 5",
+  "description": "A 5-qubit QFT-style circuit using H gates and controlled phase rotations, without final bit-reversal swaps.",
+  "source": "builtin",
+  "circuit": {
+    "num_qubits": 5,
+    "operations": [
+      {"gate": "h", "qubits": [0], "params": {}},
+      {"gate": "crz", "qubits": [1, 0], "params": {"angle": 1.570796}},
+      {"gate": "crz", "qubits": [2, 0], "params": {"angle": 0.785398}},
+      {"gate": "crz", "qubits": [3, 0], "params": {"angle": 0.392699}},
+      {"gate": "crz", "qubits": [4, 0], "params": {"angle": 0.19635}},
+      {"gate": "h", "qubits": [1], "params": {}},
+      {"gate": "crz", "qubits": [2, 1], "params": {"angle": 1.570796}},
+      {"gate": "crz", "qubits": [3, 1], "params": {"angle": 0.785398}},
+      {"gate": "crz", "qubits": [4, 1], "params": {"angle": 0.392699}},
+      {"gate": "h", "qubits": [2], "params": {}},
+      {"gate": "crz", "qubits": [3, 2], "params": {"angle": 1.570796}},
+      {"gate": "crz", "qubits": [4, 2], "params": {"angle": 0.785398}},
+      {"gate": "h", "qubits": [3], "params": {}},
+      {"gate": "crz", "qubits": [4, 3], "params": {"angle": 1.570796}},
+      {"gate": "h", "qubits": [4], "params": {}}
+    ]
+  },
+  "default_view": {
+    "metric": "k",
+    "basis": "z",
+    "marker": 15
+  },
+  "result_sets": [],
+  "provenance": {
+    "kind": "built-in larger example"
+  },
+  "results_by_metric_basis": null
+}

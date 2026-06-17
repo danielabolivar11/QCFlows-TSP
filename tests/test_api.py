@@ -6,6 +6,10 @@ from qcflows_api.main import (
     KMatrixRequest,
     MetricMatrixRequest,
     app,
+    experiment,
+    experiments,
+    demo_experiment,
+    demo_experiments,
     get_circuit,
     get_operations,
     get_state,
@@ -100,6 +104,97 @@ def test_get_operations_endpoint_returns_demo_operation_model():
             },
         ],
     }
+
+
+def test_experiments_endpoint_lists_stored_experiments():
+    payload = experiments()
+    by_id = {
+        experiment["id"]: experiment
+        for experiment in payload["experiments"]
+    }
+
+    assert set(by_id) == {
+        "bell-pair",
+        "hadamard-all",
+        "minus-state",
+        "qaoa-ring-layer",
+        "qaoa-random-6",
+        "qft-core",
+        "qft-5",
+    }
+    assert by_id["bell-pair"] == {
+        "id": "bell-pair",
+        "title": "Bell Pair",
+        "description": "Prepare a Bell pair with H on q0 followed by CX from q0 to q1.",
+        "source": "builtin",
+        "num_qubits": 5,
+        "operation_count": 2,
+        "default_view": {
+            "metric": "k",
+            "basis": "z",
+            "marker": 2,
+        },
+        "result_sets": [],
+    }
+
+
+def test_default_circuit_experiments_are_loadable():
+    expected = {
+        "hadamard-all": (5, 5),
+        "minus-state": (5, 10),
+        "qaoa-ring-layer": (4, 20),
+        "qaoa-random-6": (6, 33),
+        "qft-core": (3, 6),
+        "qft-5": (5, 15),
+    }
+
+    for experiment_id, (num_qubits, operation_count) in expected.items():
+        payload = experiment(experiment_id)
+        assert payload["num_qubits"] == num_qubits
+        assert payload["operation_count"] == operation_count
+        assert len(payload["operations"]) == operation_count
+
+
+def test_experiment_endpoint_returns_stored_circuit_detail():
+    payload = experiment("bell-pair")
+
+    assert payload["id"] == "bell-pair"
+    assert payload["title"] == "Bell Pair"
+    assert payload["num_qubits"] == 5
+    assert payload["operation_count"] == 2
+    assert payload["default_view"] == {"metric": "k", "basis": "z", "marker": 2}
+    assert payload["result_sets"] == []
+    assert payload["results_by_metric_basis"] is None
+    assert payload["markers"] == payload["timeline"]["markers"]
+    assert payload["timeline"]["current_marker"] == 2
+    assert [operation["gate"] for operation in payload["operations"]] == ["h", "cx"]
+
+
+def test_get_circuit_endpoint_accepts_demo_experiment_id():
+    payload = get_circuit(experiment="bell-pair")
+
+    assert payload["marker_label"] == "After CX(0,1)"
+    assert [operation["label"] for operation in payload["operations"]] == [
+        "H(0)",
+        "CX(0,1)",
+    ]
+
+
+def test_experiment_endpoints_reject_unknown_experiment():
+    client = TestClient(app)
+
+    detail_response = client.get("/experiments/unknown")
+    circuit_response = client.get("/get_circuit", params={"experiment": "unknown"})
+
+    assert detail_response.status_code == 404
+    assert detail_response.json()["detail"] == "unknown experiment: unknown"
+    assert circuit_response.status_code == 404
+    assert circuit_response.json()["detail"] == "unknown experiment: unknown"
+
+
+def test_demo_experiment_aliases_remain_available():
+    assert demo_experiments() == experiments()
+    assert demo_experiment("bell-pair") == experiment("bell-pair")
 
 
 def test_get_state_endpoint_can_select_history_marker():

@@ -144,10 +144,12 @@ def render_ascii_circuit(
     return f"<pre>{chr(10).join(rows)}</pre>"
 
 
-DEMO_CIRCUIT = CircuitModel(
+_BELL_PAIR_CIRCUIT = CircuitModel(
     num_qubits=5,
     operations=(
         Operation(id=1, gate="h", qubits=(0,)),
         Operation(id=2, gate="cx", qubits=(0, 1)),
     ),
 )
+
+DEMO_CIRCUIT = _BELL_PAIR_CIRCUIT

@@ -1,0 +1,55 @@
+{
+  "id": "qaoa-random-6",
+  "title": "QAOA Random 6",
+  "description": "A single QAOA-style layer on a fixed 6-qubit random weighted graph.",
+  "source": "builtin",
+  "circuit": {
+    "num_qubits": 6,
+    "operations": [
+      {"gate": "h", "qubits": [0], "params": {}},
+      {"gate": "h", "qubits": [1], "params": {}},
+      {"gate": "h", "qubits": [2], "params": {}},
+      {"gate": "h", "qubits": [3], "params": {}},
+      {"gate": "h", "qubits": [4], "params": {}},
+      {"gate": "h", "qubits": [5], "params": {}},
+      {"gate": "cx", "qubits": [0, 1], "params": {}},
+      {"gate": "rz", "qubits": [1], "params": {"angle": 0.71}},
+      {"gate": "cx", "qubits": [0, 1], "params": {}},
+      {"gate": "cx", "qubits": [0, 3], "params": {}},
+      {"gate": "rz", "qubits": [3], "params": {"angle": 1.32}},
+      {"gate": "cx", "qubits": [0, 3], "params": {}},
+      {"gate": "cx", "qubits": [1, 2], "params": {}},
+      {"gate": "rz", "qubits": [2], "params": {"angle": 0.94}},
+      {"gate": "cx", "qubits": [1, 2], "params": {}},
+      {"gate": "cx", "qubits": [1, 4], "params": {}},
+      {"gate": "rz", "qubits": [4], "params": {"angle": 0.52}},
+      {"gate": "cx", "qubits": [1, 4], "params": {}},
+      {"gate": "cx", "qubits": [2, 5], "params": {}},
+      {"gate": "rz", "qubits": [5], "params": {"angle": 1.18}},
+      {"gate": "cx", "qubits": [2, 5], "params": {}},
+      {"gate": "cx", "qubits": [3, 4], "params": {}},
+      {"gate": "rz", "qubits": [4], "params": {"angle": 0.83}},
+      {"gate": "cx", "qubits": [3, 4], "params": {}},
+      {"gate": "cx", "qubits": [4, 5], "params": {}},
+      {"gate": "rz", "qubits": [5], "params": {"angle": 1.41}},
+      {"gate": "cx", "qubits": [4, 5], "params": {}},
+      {"gate": "rx", "qubits": [0], "params": {"angle": 0.65}},
+      {"gate": "rx", "qubits": [1], "params": {"angle": 0.65}},
+      {"gate": "rx", "qubits": [2], "params": {"angle": 0.65}},
+      {"gate": "rx", "qubits": [3], "params": {"angle": 0.65}},
+      {"gate": "rx", "qubits": [4], "params": {"angle": 0.65}},
+      {"gate": "rx", "qubits": [5], "params": {"angle": 0.65}}
+    ]
+  },
+  "default_view": {
+    "metric": "k",
+    "basis": "z",
+    "marker": 33
+  },
+  "result_sets": [],
+  "provenance": {
+    "kind": "built-in larger example",
+    "notes": "Deterministic random weighted graph; angles are illustrative and not optimized."
+  },
+  "results_by_metric_basis": null
+}

@@ -1,0 +1,32 @@
+{
+  "id": "bell-pair",
+  "title": "Bell Pair",
+  "description": "Prepare a Bell pair with H on q0 followed by CX from q0 to q1.",
+  "source": "builtin",
+  "circuit": {
+    "num_qubits": 5,
+    "operations": [
+      {
+        "gate": "h",
+        "qubits": [0],
+        "params": {}
+      },
+      {
+        "gate": "cx",
+        "qubits": [0, 1],
+        "params": {}
+      }
+    ]
+  },
+  "default_view": {
+    "metric": "k",
+    "basis": "z",
+    "marker": 2
+  },
+  "result_sets": [],
+  "provenance": {
+    "kind": "built-in demo",
+    "notes": "Minimal Bell-pair scene. Precomputed ideal and hardware result bundles can be added without changing the frontend loader contract."
+  },
+  "results_by_metric_basis": null
+}

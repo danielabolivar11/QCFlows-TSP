@@ -68,8 +68,8 @@ def test_get_state_endpoint_returns_demo_bell_state():
 
     assert payload["basis"] == "z"
     assert payload["marker"] == 2
-    assert payload["num_qubits"] == 5
-    assert [item["basis_state"] for item in nonzero] == ["|00000>", "|00011>"]
+    assert payload["num_qubits"] == 2
+    assert [item["basis_state"] for item in nonzero] == ["|00>", "|11>"]
     assert [item["magnitude_squared"] for item in nonzero] == [
         pytest.approx(0.5),
         pytest.approx(0.5),
@@ -91,7 +91,7 @@ def test_get_operations_endpoint_returns_demo_operation_model():
     payload = get_operations()
 
     assert payload == {
-        "num_qubits": 5,
+        "num_qubits": 2,
         "operation_count": 2,
         "operations": [
             {
@@ -134,7 +134,7 @@ def test_experiments_endpoint_lists_stored_experiments():
         "title": "Bell Pair",
         "description": "Prepare a Bell pair with H on q0 followed by CX from q0 to q1.",
         "source": "builtin",
-        "num_qubits": 5,
+        "num_qubits": 2,
         "operation_count": 2,
         "default_view": {
             "metric": "k",
@@ -195,7 +195,7 @@ def test_experiment_endpoint_returns_stored_circuit_detail():
 
     assert payload["id"] == "bell-pair"
     assert payload["title"] == "Bell Pair"
-    assert payload["num_qubits"] == 5
+    assert payload["num_qubits"] == 2
     assert payload["operation_count"] == 2
     assert payload["default_view"] == {"metric": "k", "basis": "z", "marker": 2}
     assert payload["result_sets"] == []
@@ -241,7 +241,7 @@ def test_get_state_endpoint_can_select_history_marker():
 
     assert payload["marker"] == 1
     assert payload["marker_label"] == "After H(0)"
-    assert [item["basis_state"] for item in nonzero] == ["|00000>", "|00001>"]
+    assert [item["basis_state"] for item in nonzero] == ["|00>", "|01>"]
     assert [item["magnitude_squared"] for item in nonzero] == [
         pytest.approx(0.5),
         pytest.approx(0.5),
@@ -253,10 +253,9 @@ def test_graph_data_endpoint_returns_demo_k_signal():
 
     assert payload["metric"] == "k"
     assert payload["metric_label"] == "K_Z"
-    assert payload["num_qubits"] == 5
+    assert payload["num_qubits"] == 2
     assert payload["nodes"][0]["prob0"] == pytest.approx(0.5)
     assert payload["nodes"][1]["prob0"] == pytest.approx(0.5)
-    assert payload["nodes"][2]["prob0"] == pytest.approx(1.0)
     assert payload["matrix"][0][1] == pytest.approx(1.0)
     assert payload["matrix"][1][0] == pytest.approx(1.0)
     assert payload["edges"] == [{
@@ -328,7 +327,7 @@ def test_get_circuit_endpoint_returns_demo_diagram():
     payload = get_circuit()
 
     assert payload["marker_label"] == "After CX(0,1)"
-    assert payload["num_qubits"] == 5
+    assert payload["num_qubits"] == 2
     assert payload["operation_count"] == 2
     assert [operation["label"] for operation in payload["operations"]] == [
         "H(0)",

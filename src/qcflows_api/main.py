@@ -233,7 +233,7 @@ def _is_number(value: Any) -> bool:
     return not isinstance(value, bool) and isinstance(value, (int, float))
 
 
-_DEMO_NUM_QUBITS = 5
+_DEMO_NUM_QUBITS = 2
 _DEMO_INPUT_STATE = np.zeros(2**_DEMO_NUM_QUBITS, dtype=complex)
 _DEMO_INPUT_STATE[0] = 1.0
 _DEMO_H_STATE = np.zeros(2**_DEMO_NUM_QUBITS, dtype=complex)
@@ -406,6 +406,5 @@ def simulate(req: SimulateRequest) -> dict[str, Any]:
         return {"num_qubits": req.num_qubits, "results_by_basis": results_by_basis}
 
     return {"basis": req.basis, "num_qubits": req.num_qubits, "results": results}
-
 
 

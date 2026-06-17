@@ -156,7 +156,7 @@ def render_ascii_circuit(
 
 
 _BELL_PAIR_CIRCUIT = CircuitModel(
-    num_qubits=5,
+    num_qubits=2,
     operations=(
         Operation(id=1, gate="h", qubits=(0,)),
         Operation(id=2, gate="cx", qubits=(0, 1)),

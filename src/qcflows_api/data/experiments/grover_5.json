@@ -1,0 +1,50 @@
+{
+  "id": "grover-5",
+  "title": "Grover 5",
+  "description": "One Grover iteration using four search qubits and one phase ancilla, marking q0..q3 = 1011.",
+  "source": "builtin",
+  "circuit": {
+    "num_qubits": 5,
+    "operations": [
+      {"gate": "x", "qubits": [4], "params": {}},
+      {"gate": "h", "qubits": [4], "params": {}},
+      {"gate": "h", "qubits": [0], "params": {}},
+      {"gate": "h", "qubits": [1], "params": {}},
+      {"gate": "h", "qubits": [2], "params": {}},
+      {"gate": "h", "qubits": [3], "params": {}},
+      {"gate": "x", "qubits": [1], "params": {}},
+      {"gate": "mcx", "qubits": [0, 1, 2, 3, 4], "params": {}},
+      {"gate": "x", "qubits": [1], "params": {}},
+      {"gate": "h", "qubits": [0], "params": {}},
+      {"gate": "h", "qubits": [1], "params": {}},
+      {"gate": "h", "qubits": [2], "params": {}},
+      {"gate": "h", "qubits": [3], "params": {}},
+      {"gate": "x", "qubits": [0], "params": {}},
+      {"gate": "x", "qubits": [1], "params": {}},
+      {"gate": "x", "qubits": [2], "params": {}},
+      {"gate": "x", "qubits": [3], "params": {}},
+      {"gate": "h", "qubits": [3], "params": {}},
+      {"gate": "mcx", "qubits": [0, 1, 2, 3], "params": {}},
+      {"gate": "h", "qubits": [3], "params": {}},
+      {"gate": "x", "qubits": [0], "params": {}},
+      {"gate": "x", "qubits": [1], "params": {}},
+      {"gate": "x", "qubits": [2], "params": {}},
+      {"gate": "x", "qubits": [3], "params": {}},
+      {"gate": "h", "qubits": [0], "params": {}},
+      {"gate": "h", "qubits": [1], "params": {}},
+      {"gate": "h", "qubits": [2], "params": {}},
+      {"gate": "h", "qubits": [3], "params": {}}
+    ]
+  },
+  "default_view": {
+    "metric": "k",
+    "basis": "z",
+    "marker": 28
+  },
+  "result_sets": [],
+  "provenance": {
+    "kind": "built-in Grover example",
+    "notes": "Uses a compact MCX operation supported by the local Qiskit bridge instead of expanding the oracle and diffuser into primitive gates."
+  },
+  "results_by_metric_basis": null
+}

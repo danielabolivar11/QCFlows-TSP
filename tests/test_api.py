@@ -121,6 +121,7 @@ def test_experiments_endpoint_lists_stored_experiments():
 
     assert set(by_id) == {
         "bell-pair",
+        "grover-5",
         "hadamard-all",
         "minus-state",
         "qaoa-ring-layer",
@@ -147,6 +148,7 @@ def test_experiments_endpoint_lists_stored_experiments():
 def test_default_circuit_experiments_are_loadable():
     expected = {
         "hadamard-all": (5, 5),
+        "grover-5": (5, 28),
         "minus-state": (5, 10),
         "qaoa-ring-layer": (4, 20),
         "qaoa-random-6": (6, 33),

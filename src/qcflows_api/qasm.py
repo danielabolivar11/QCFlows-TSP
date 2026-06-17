@@ -11,7 +11,8 @@ _SINGLE = {"h", "x", "y", "z", "s", "t", "sdg", "tdg", "sx"}
 _ROT = {"rx", "ry", "rz"}
 _TWO = {"cx", "cz", "swap"}
 _CROT = {"crx", "cry", "crz"}
-_SUPPORTED = _SINGLE | _ROT | _TWO | _CROT
+_MULTI = {"mcx"}
+_SUPPORTED = _SINGLE | _ROT | _TWO | _CROT | _MULTI
 
 
 class _Op(BaseModel):
@@ -45,6 +46,10 @@ def _ops_to_circuit(num_qubits: int, operations: list[dict]) -> QuantumCircuit:
         elif gate in _CROT:
             angle = float(params.get("angle", params.get("theta", np.pi / 2)))
             getattr(qc, gate)(angle, qubits[0], qubits[1])
+        elif gate == "mcx":
+            if len(qubits) < 2:
+                raise ValueError("MCX requires at least one control and one target")
+            qc.mcx(qubits[:-1], qubits[-1])
         else:
             raise ValueError(f"Unsupported gate: {gate!r}")
     return qc
@@ -54,7 +59,12 @@ def _circuit_to_ops(qc: QuantumCircuit) -> list[dict]:
     operations = []
     for instruction in qc.data:
         op = instruction.operation
-        gate = op.name.lower()
+        raw_gate = op.name.lower()
+        gate = (
+            "mcx"
+            if raw_gate in {"ccx", "mcx"} or raw_gate.startswith("mcx_")
+            else raw_gate
+        )
         if gate not in _SUPPORTED:
             raise ValueError(f"Unsupported gate in QASM: {gate!r}")
         qubits = [qc.find_bit(q).index for q in instruction.qubits]

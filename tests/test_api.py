@@ -19,6 +19,12 @@ from qcflows_api.main import (
     metric_matrix,
     timeline,
 )
+from qcflows_api.qasm import (
+    ExportQasmRequest,
+    ImportQasmRequest,
+    export_qasm,
+    import_qasm,
+)
 
 
 def test_health_endpoint():
@@ -153,6 +159,33 @@ def test_default_circuit_experiments_are_loadable():
         assert payload["num_qubits"] == num_qubits
         assert payload["operation_count"] == operation_count
         assert len(payload["operations"]) == operation_count
+
+
+def test_qasm_round_trip_accepts_mcx_operations():
+    operations = [
+        {"gate": "mcx", "qubits": [0, 1, 2, 3], "params": {}},
+        {"gate": "mcx", "qubits": [0, 1, 2], "params": {}},
+    ]
+
+    qasm_payload = export_qasm(
+        ExportQasmRequest(
+            num_qubits=4,
+            operations=operations,
+        ),
+    )
+    round_trip = import_qasm(ImportQasmRequest(qasm=qasm_payload["qasm"]))
+
+    assert round_trip["num_qubits"] == 4
+    assert round_trip["operations"][0] == {
+        "gate": "mcx",
+        "qubits": [0, 1, 2, 3],
+        "params": {},
+    }
+    assert round_trip["operations"][1] == {
+        "gate": "mcx",
+        "qubits": [0, 1, 2],
+        "params": {},
+    }
 
 
 def test_experiment_endpoint_returns_stored_circuit_detail():

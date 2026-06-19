@@ -134,6 +134,17 @@ def render_ascii_circuit(
                 else:
                     rows[qubit] += "---" if first_operation else "--"
             continue
+        if operation.gate == "mcx" and len(operation.qubits) >= 2:
+            controls = set(operation.qubits[:-1])
+            target = operation.qubits[-1]
+            for qubit in range(num_qubits):
+                if qubit in controls:
+                    rows[qubit] += "-@-" if first_operation else "@-"
+                elif qubit == target:
+                    rows[qubit] += "-X-" if first_operation else "X-"
+                else:
+                    rows[qubit] += "---" if first_operation else "--"
+            continue
 
         label = operation.gate.upper()[:3].center(3, "-")
         targets = set(operation.qubits)
@@ -144,10 +155,12 @@ def render_ascii_circuit(
     return f"<pre>{chr(10).join(rows)}</pre>"
 
 
-DEMO_CIRCUIT = CircuitModel(
-    num_qubits=5,
+_BELL_PAIR_CIRCUIT = CircuitModel(
+    num_qubits=2,
     operations=(
         Operation(id=1, gate="h", qubits=(0,)),
         Operation(id=2, gate="cx", qubits=(0, 1)),
     ),
 )
+
+DEMO_CIRCUIT = _BELL_PAIR_CIRCUIT

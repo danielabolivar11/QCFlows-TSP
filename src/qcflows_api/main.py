@@ -9,6 +9,12 @@ from pydantic import BaseModel, Field
 import httpx
 
 from qcflows_api.circuit_model import DEMO_CIRCUIT, CircuitSnapshot
+from qcflows_api.experiments import (
+    DEFAULT_EXPERIMENT_ID,
+    StoredExperiment,
+    get_experiment,
+    load_experiments,
+)
 from qcflows_api.pipeline import compute_markers, compute_markers_all_basis, compute_markers_grid
 from qcflows_api.demo.routes import router as demo_router
 from qcflows_api.qasm import router as qasm_router
@@ -111,6 +117,37 @@ def get_operations() -> dict[str, Any]:
     return DEMO_CIRCUIT.operations_payload()
 
 
+@app.get("/experiments")
+def experiments() -> dict[str, Any]:
+    return {
+        "experiments": [
+            experiment.summary_payload()
+            for experiment in load_experiments().values()
+        ],
+    }
+
+
+@app.get("/experiments/{experiment_id}")
+def experiment(
+    experiment_id: str,
+    marker: Annotated[int | None, Query(ge=0)] = None,
+) -> dict[str, Any]:
+    return _resolve_experiment(experiment_id).detail_payload(marker)
+
+
+@app.get("/demo_experiments")
+def demo_experiments() -> dict[str, Any]:
+    return experiments()
+
+
+@app.get("/demo_experiments/{experiment_id}")
+def demo_experiment(
+    experiment_id: str,
+    marker: Annotated[int | None, Query(ge=0)] = None,
+) -> dict[str, Any]:
+    return experiment(experiment_id, marker)
+
+
 @app.get("/get_state")
 def get_state(
     basis: Literal["x", "y", "z"] = "z",
@@ -163,10 +200,12 @@ def graph_data(
 
 @app.get("/get_circuit")
 def get_circuit(
+    experiment: str = DEFAULT_EXPERIMENT_ID,
     marker: Annotated[int | None, Query(ge=0)] = None,
 ) -> dict[str, Any]:
-    snapshot = _resolve_demo_snapshot(marker)
-    return DEMO_CIRCUIT.circuit_payload(snapshot.marker)
+    stored_experiment = _resolve_experiment(experiment)
+    snapshot = _resolve_demo_snapshot(marker, stored_experiment)
+    return stored_experiment.circuit.circuit_payload(snapshot.marker)
 
 
 def _parse_complex_matrix(raw_matrix: list[list[Any]]) -> np.ndarray:
@@ -194,7 +233,7 @@ def _is_number(value: Any) -> bool:
     return not isinstance(value, bool) and isinstance(value, (int, float))
 
 
-_DEMO_NUM_QUBITS = 5
+_DEMO_NUM_QUBITS = 2
 _DEMO_INPUT_STATE = np.zeros(2**_DEMO_NUM_QUBITS, dtype=complex)
 _DEMO_INPUT_STATE[0] = 1.0
 _DEMO_H_STATE = np.zeros(2**_DEMO_NUM_QUBITS, dtype=complex)
@@ -216,9 +255,23 @@ _DEMO_BELL_RDM = np.array([
 ], dtype=complex)
 
 
-def _resolve_demo_snapshot(marker: int | None) -> CircuitSnapshot:
+def _resolve_experiment(experiment_id: str) -> StoredExperiment:
+    stored_experiment = get_experiment(experiment_id)
+    if stored_experiment is None:
+        raise HTTPException(
+            status_code=404,
+            detail=f"unknown experiment: {experiment_id}",
+        )
+    return stored_experiment
+
+
+def _resolve_demo_snapshot(
+    marker: int | None,
+    experiment: StoredExperiment | None = None,
+) -> CircuitSnapshot:
+    circuit = experiment.circuit if experiment else DEMO_CIRCUIT
     try:
-        return DEMO_CIRCUIT.snapshot(marker)
+        return circuit.snapshot(marker)
     except ValueError as exc:
         raise HTTPException(status_code=422, detail=str(exc)) from exc
 
@@ -353,8 +406,5 @@ def simulate(req: SimulateRequest) -> dict[str, Any]:
         return {"num_qubits": req.num_qubits, "results_by_basis": results_by_basis}
 
     return {"basis": req.basis, "num_qubits": req.num_qubits, "results": results}
-
-
-
 
 

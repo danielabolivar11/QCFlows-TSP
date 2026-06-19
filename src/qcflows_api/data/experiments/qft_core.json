@@ -1,0 +1,27 @@
+{
+  "id": "qft-core",
+  "title": "QFT Core",
+  "description": "A 3-qubit QFT-style core using H and controlled phase rotations, without final bit-reversal swaps.",
+  "source": "builtin",
+  "circuit": {
+    "num_qubits": 3,
+    "operations": [
+      {"gate": "h", "qubits": [0], "params": {}},
+      {"gate": "crz", "qubits": [1, 0], "params": {"angle": 1.570796}},
+      {"gate": "crz", "qubits": [2, 0], "params": {"angle": 0.785398}},
+      {"gate": "h", "qubits": [1], "params": {}},
+      {"gate": "crz", "qubits": [2, 1], "params": {"angle": 1.570796}},
+      {"gate": "h", "qubits": [2], "params": {}}
+    ]
+  },
+  "default_view": {
+    "metric": "k",
+    "basis": "z",
+    "marker": 6
+  },
+  "result_sets": [],
+  "provenance": {
+    "kind": "built-in default circuit"
+  },
+  "results_by_metric_basis": null
+}
